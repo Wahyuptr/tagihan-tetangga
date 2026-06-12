@@ -82,28 +82,21 @@
 
   <div class="header">
     <h1>💻 Tagihan Internet</h1>
-    <p class="period">Periode: <strong>16 Mei – 16 Juni 2026</strong></p>
+    <p class="period">Periode: <strong>{{ PERIOD_RANGE }}</strong></p>
   </div>
 
-    <div class="alert warn">
-    <span class="icon">⚠️</span>
-    <div>
-      <strong>Jatuh tempo: 16 Juni 2026</strong><br>
-      Akses internet otomatis diputus jika belum lunas setelah tanggal 16.
-    </div>
-  </div>
+  {{ ALERT_HTML }}
 
   <div class="card">
     <h2>Status Bulan Ini</h2>
     <div class="status-row">
-      <div class="badge belum">
-        <span class="dot"></span> BELUM LUNAS
+      <div class="badge {{ STATUS_CLASS }}">
+        <span class="dot"></span> {{ STATUS_TEXT }}
       </div>
-      <span style="color:var(--muted);font-size:0.85rem">Juni 2026</span>
+      <span style="color:var(--muted);font-size:0.85rem">{{ PERIOD_LABEL }}</span>
     </div>
     <p style="margin-top:12px;font-size:0.88rem;color:var(--muted)">
-      Segera lakukan pembayaran sebelum <strong style="color:var(--text)">16 Juni 2026</strong>.
-      Pengingat otomatis dikirim via Telegram H-2 dan H-1.
+{{ DESCRIPTION_HTML }}
     </p>
   </div>
 
@@ -143,11 +136,7 @@
         <tr><th>Bulan</th><th>Status</th><th>Jatuh Tempo</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Juni 2026</td>
-          <td class="status-belum">❌ BELUM</td>
-          <td>16 Juni 2026</td>
-        </tr>
+{{ HISTORY_ROWS }}
       </tbody>
     </table>
   </div>
@@ -187,9 +176,7 @@
       </div>
     </div>
 
-        <div style="text-align:center;margin-top:12px;padding:16px;background:rgba(245,158,11,0.06);border:1px dashed var(--amber);border-radius:8px">
-      <p style="color:var(--amber);font-size:0.85rem">📱 QRIS belum tersedia — minta QR code ke pemilik</p>
-    </div>
+    {{ QRIS_SECTION }}
 
     <div class="alert info" style="margin-top:16px;margin-bottom:0">
       <span class="icon">ℹ️</span>
@@ -220,7 +207,7 @@
       </div>
       <p id="cd-status" style="margin-top:10px;font-size:0.85rem;color:var(--muted)"></p>
     </div>
-    <span id="due-target" style="display:none">2026-06-16T00:00:00+07:00</span>
+    <span id="due-target" style="display:none">{{ DUE_TIMESTAMP }}</span>
   </div>
 
   <div class="card">
@@ -252,7 +239,7 @@
   <div class="footer">
     🏠 Jaringan Tetangga · Managed by MikroTik hAP ax²<br>
     Auto-billing aktif · Diputus otomatis jika belum bayar<br>
-    <span style="font-size:0.7rem">Update: 12 Jun 2026, 14:36 WIB</span>
+    <span style="font-size:0.7rem">Update: {{ UPDATE_TIME }}</span>
   </div>
 
 </div>
