@@ -145,7 +145,7 @@
       <tbody>
         <tr>
           <td>Juni 2026</td>
-          <td class="status-lunas">✅ LUNAS</td>
+          <td class="status-belum">❌ BELUM</td>
           <td>16 Juni 2026</td>
         </tr>
         <tr>
@@ -179,34 +179,43 @@
 
   <div class="card">
     <h2>Metode Pembayaran</h2>
+
     <div class="pay-method">
       <div class="pay-icon">🏦</div>
       <div class="pay-info">
-        <div class="pay-name">Transfer Bank</div>
-        <div class="pay-detail">BCA · 1234567890 · a/n [NAMA]</div>
+        <div class="pay-name">Transfer Bank BRI</div>
+        <div class="pay-detail">7853 0100 7367 530 · a/n <strong>WAHYU PRATAMA PUTRA</strong></div>
       </div>
     </div>
+
     <div class="pay-method">
       <div class="pay-icon">🟢</div>
       <div class="pay-info">
         <div class="pay-name">GoPay</div>
-        <div class="pay-detail">0812XXXXXXXX · a/n [NAMA]</div>
+        <div class="pay-detail">0813 8634 1923 · a/n <strong>WAHYU PRATAMA PUTRA</strong></div>
       </div>
     </div>
+
     <div class="pay-method">
       <div class="pay-icon">🔵</div>
       <div class="pay-info">
         <div class="pay-name">DANA</div>
-        <div class="pay-detail">0812XXXXXXXX · a/n [NAMA]</div>
+        <div class="pay-detail">0851 5662 2541 · a/n <strong>WAHYU PRATAMA PUTRA</strong></div>
       </div>
     </div>
+
     <div class="pay-method">
       <div class="pay-icon">📱</div>
       <div class="pay-info">
-        <div class="pay-name">QRIS / ShopeePay</div>
-        <div class="pay-detail">Scan QR atau minta ke pemilik</div>
+        <div class="pay-name">QRIS (Scan Langsung)</div>
+        <div class="pay-detail">Scan kode QR di bawah — semua e-wallet & mobile banking support QRIS</div>
       </div>
     </div>
+
+        <div style="text-align:center;margin-top:12px;padding:16px;background:rgba(245,158,11,0.06);border:1px dashed var(--amber);border-radius:8px">
+      <p style="color:var(--amber);font-size:0.85rem">📱 QRIS belum tersedia — minta QR code ke pemilik</p>
+    </div>
+
     <div class="alert info" style="margin-top:16px;margin-bottom:0">
       <span class="icon">ℹ️</span>
       <div>
@@ -216,12 +225,108 @@
     </div>
   </div>
 
+  <!-- COUNTDOWN + BUKTI BAYAR -->
+  <div class="card">
+    <h2>⏳ Hitung Mundur Jatuh Tempo</h2>
+    <div id="countdown" style="text-align:center;padding:12px 0">
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+        <div style="background:rgba(245,158,11,0.1);border-radius:8px;padding:12px 16px;min-width:60px">
+          <div id="cd-days" style="font-size:1.5rem;font-weight:700;color:var(--amber)">--</div>
+          <div style="font-size:0.7rem;color:var(--muted)">HARI</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.1);border-radius:8px;padding:12px 16px;min-width:60px">
+          <div id="cd-hours" style="font-size:1.5rem;font-weight:700;color:var(--amber)">--</div>
+          <div style="font-size:0.7rem;color:var(--muted)">JAM</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.1);border-radius:8px;padding:12px 16px;min-width:60px">
+          <div id="cd-mins" style="font-size:1.5rem;font-weight:700;color:var(--amber)">--</div>
+          <div style="font-size:0.7rem;color:var(--muted)">MENIT</div>
+        </div>
+      </div>
+      <p id="cd-status" style="margin-top:10px;font-size:0.85rem;color:var(--muted)"></p>
+    </div>
+    <span id="due-target" style="display:none">2026-06-16T00:00:00+07:00</span>
+  </div>
+
+  <div class="card">
+    <h2>📎 Kirim Bukti Pembayaran</h2>
+    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:14px">
+      Setelah transfer, kirim screenshot bukti bayar via WhatsApp atau Telegram.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a href="https://wa.me/6281386341923?text=Halo%2C+saya+sudah+bayar+tagihan+internet.+Berikut+bukti+transfer%3A"
+         target="_blank"
+         style="flex:1;min-width:140px;display:flex;align-items:center;justify-content:center;gap:8px;
+                background:#25D366;color:#fff;padding:12px 16px;border-radius:8px;
+                text-decoration:none;font-weight:600;font-size:0.9rem">
+        🟢 WhatsApp
+      </a>
+      <a href="https://t.me/Wahyuptr"
+         target="_blank"
+         style="flex:1;min-width:140px;display:flex;align-items:center;justify-content:center;gap:8px;
+                background:#2AABEE;color:#fff;padding:12px 16px;border-radius:8px;
+                text-decoration:none;font-weight:600;font-size:0.9rem">
+        🔵 Telegram
+      </a>
+    </div>
+    <p style="margin-top:12px;font-size:0.78rem;color:var(--muted);text-align:center">
+      Status <strong>LUNAS</strong> akan diperbarui maksimal 5 menit setelah konfirmasi.
+    </p>
+  </div>
+
   <div class="footer">
     🏠 Jaringan Tetangga · Managed by MikroTik hAP ax²<br>
     Auto-billing aktif · Diputus otomatis jika belum bayar<br>
-    <span style="font-size:0.7rem">Update: 12 Jun 2026, 14:16 WIB</span>
+    <span style="font-size:0.7rem">Update: 12 Jun 2026, 14:27 WIB</span>
   </div>
 
 </div>
+
+<script>
+// ── Countdown to due date ──
+(function() {
+  var el = document.getElementById('due-target');
+  if (!el) return;
+  var target = new Date(el.textContent.trim());
+  if (isNaN(target.getTime())) return;
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function tick() {
+    var now = new Date();
+    var diff = target - now;
+
+    var daysEl = document.getElementById('cd-days');
+    var hoursEl = document.getElementById('cd-hours');
+    var minsEl = document.getElementById('cd-mins');
+    var statusEl = document.getElementById('cd-status');
+
+    if (diff <= 0) {
+      daysEl.textContent = '00'; hoursEl.textContent = '00'; minsEl.textContent = '00';
+      statusEl.innerHTML = '⚠️ <strong>Jatuh tempo telah lewat!</strong> Internet mungkin telah diputus. Segera lakukan pembayaran.';
+      return;
+    }
+
+    var days = Math.floor(diff / 86400000);
+    var hours = Math.floor((diff % 86400000) / 3600000);
+    var mins = Math.floor((diff % 3600000) / 60000);
+
+    daysEl.textContent = pad(days);
+    hoursEl.textContent = pad(hours);
+    minsEl.textContent = pad(mins);
+
+    if (days > 3) {
+      statusEl.innerHTML = '⏳ ' + days + ' hari lagi sebelum jatuh tempo.';
+    } else if (days > 0) {
+      statusEl.innerHTML = '⚠️ Tinggal <strong>' + days + ' hari</strong> lagi! Segera lunasi.';
+    } else {
+      statusEl.innerHTML = '🚨 <strong>Jatuh tempo hari ini!</strong> Bayar sekarang sebelum internet diputus.';
+    }
+  }
+
+  tick();
+  setInterval(tick, 60000);
+})();
+</script>
 </body>
 </html>
