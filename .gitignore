@@ -1,0 +1,5 @@
+# Token & credentials — NEVER commit
+.env
+token.txt
+__pycache__/
+*.pyc
