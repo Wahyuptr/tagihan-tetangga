@@ -75,6 +75,47 @@
     .card { padding: 18px }
     .info-grid { grid-template-columns: 100px 1fr }
   }
+
+  /* ── Pop-up Jatuh Tempo ── */
+  .popup-overlay {
+    display: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 9999;
+    justify-content: center; align-items: center;
+  }
+  .popup-overlay.active { display: flex }
+  .popup-box {
+    background: var(--card);
+    border: 1px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    max-width: 400px; width: 90%;
+    text-align: center;
+    animation: popIn 0.3s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.9); opacity: 0 }
+    to   { transform: scale(1); opacity: 1 }
+  }
+  .popup-box .emoji { font-size: 3rem; margin-bottom: 12px }
+  .popup-box h3 { font-size: 1.2rem; margin-bottom: 8px; color: var(--amber) }
+  .popup-box p { font-size: 0.9rem; color: var(--muted); margin-bottom: 18px; line-height: 1.5 }
+  .popup-btn {
+    display: inline-block; width: 100%;
+    background: var(--amber); color: #000;
+    padding: 12px; border: none; border-radius: 8px;
+    font-weight: 700; font-size: 0.95rem;
+    cursor: pointer; text-decoration: none;
+    margin-bottom: 8px;
+  }
+  .popup-btn:hover { opacity: 0.9 }
+  .popup-close {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border); padding: 8px 16px;
+    border-radius: 8px; cursor: pointer; font-size: 0.85rem
+  }
+
 </style>
 </head>
 <body>
@@ -187,6 +228,25 @@
     </div>
   </div>
 
+
+  <!-- POP-UP JATUH TEMPO -->
+  <div id="due-popup" class="popup-overlay">
+    <div class="popup-box">
+      <div class="emoji">⚠️</div>
+      <h3 id="popup-title">Jatuh Tempo Hampir Tiba!</h3>
+      <p id="popup-msg">Segera lakukan pembayaran sebelum internet diputus.</p>
+      <a href="https://t.me/whayuptr?text=Saya+sudah+bayar+tagihan+internet+bulan+ini.+Mohon+diaktifkan."
+         target="_blank" class="popup-btn">
+        💬 Konfirmasi via Telegram
+      </a>
+      <a href="https://wa.me/6281386341923?text=Halo%2C+saya+sudah+bayar+tagihan+internet.+Berikut+bukti+transfer%3A"
+         target="_blank" class="popup-btn" style="background:#25D366">
+        🟢 Konfirmasi via WhatsApp
+      </a>
+      <button class="popup-close" onclick="closePopup()">Tutup</button>
+    </div>
+  </div>
+
   <!-- COUNTDOWN + BUKTI BAYAR -->
   <div class="card">
     <h2>⏳ Hitung Mundur Jatuh Tempo</h2>
@@ -254,6 +314,8 @@
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
+  var popupShown = false;
+
   function tick() {
     var now = new Date();
     var diff = target - now;
@@ -263,27 +325,66 @@
     var minsEl = document.getElementById('cd-mins');
     var statusEl = document.getElementById('cd-status');
 
+    // Compute days left
+    var daysLeft = Math.floor(diff / 86400000);
+
     if (diff <= 0) {
       daysEl.textContent = '00'; hoursEl.textContent = '00'; minsEl.textContent = '00';
       statusEl.innerHTML = '⚠️ <strong>Jatuh tempo telah lewat!</strong> Internet mungkin telah diputus. Segera lakukan pembayaran.';
+      // Show popup on overdue
+      if (!popupShown) { showPopup(-1); popupShown = true; }
       return;
     }
 
-    var days = Math.floor(diff / 86400000);
     var hours = Math.floor((diff % 86400000) / 3600000);
     var mins = Math.floor((diff % 3600000) / 60000);
 
-    daysEl.textContent = pad(days);
+    daysEl.textContent = pad(daysLeft);
     hoursEl.textContent = pad(hours);
     minsEl.textContent = pad(mins);
 
-    if (days > 3) {
-      statusEl.innerHTML = '⏳ ' + days + ' hari lagi sebelum jatuh tempo.';
-    } else if (days > 0) {
-      statusEl.innerHTML = '⚠️ Tinggal <strong>' + days + ' hari</strong> lagi! Segera lunasi.';
+    if (daysLeft > 3) {
+      statusEl.innerHTML = '⏳ ' + daysLeft + ' hari lagi sebelum jatuh tempo.';
+    } else if (daysLeft > 0) {
+      statusEl.innerHTML = '⚠️ Tinggal <strong>' + daysLeft + ' hari</strong> lagi! Segera lunasi.';
+      if (!popupShown) { showPopup(daysLeft); popupShown = true; }
     } else {
       statusEl.innerHTML = '🚨 <strong>Jatuh tempo hari ini!</strong> Bayar sekarang sebelum internet diputus.';
+      if (!popupShown) { showPopup(0); popupShown = true; }
     }
+  }
+
+  function showPopup(daysLeft) {
+    var overlay = document.getElementById('due-popup');
+    var title = document.getElementById('popup-title');
+    var msg = document.getElementById('popup-msg');
+    if (!overlay) return;
+    if (daysLeft <= 0) {
+      title.textContent = '🚨 Jatuh Tempo Terlewat!';
+      msg.innerHTML = 'Internet mungkin telah <strong>diputus</strong>. Segera bayar dan konfirmasi via Telegram untuk mengaktifkan kembali.';
+    } else if (daysLeft === 1) {
+      title.textContent = '⚠️ Tinggal 1 Hari Lagi!';
+      msg.innerHTML = 'Jatuh tempo <strong>besok</strong>. Bayar sekarang sebelum internet diputus.';
+    } else {
+      title.textContent = '⏰ ' + daysLeft + ' Hari Menuju Jatuh Tempo';
+      msg.innerHTML = 'Segera lunasi tagihan internet. Setelah jatuh tempo, akses internet <strong>otomatis diputus</strong>.';
+    }
+    overlay.classList.add('active');
+  }
+
+  window.closePopup = function() {
+    document.getElementById('due-popup').classList.remove('active');
+  };
+
+  // Close popup when clicking outside
+  document.getElementById('due-popup').addEventListener('click', function(e) {
+    if (e.target === this) closePopup();
+  });
+
+  // Only show popup if status is NOT lunas
+  var badgeEl = document.querySelector('.badge');
+  if (badgeEl && badgeEl.classList.contains('lunas')) {
+    popupShown = true; // Don't bother if already paid
   }
 
   tick();
