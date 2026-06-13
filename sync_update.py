@@ -239,19 +239,11 @@ def render(status):
 
 
 def git_push():
-    """Commit and push (auth via SSH key). Handles conflicts with rebase."""
+    """Commit and push (auth via SSH key). Simple push, no stash dance."""
     import subprocess as sp
-    # Stash any local changes, pull, then pop
-    sp.run(["git", "stash"], cwd=str(REPO_DIR),
-           capture_output=True, text=True, timeout=10)
-    sp.run(["git", "pull", "--rebase", "origin", "main"],
-           cwd=str(REPO_DIR), capture_output=True, text=True, timeout=10)
-    sp.run(["git", "stash", "pop"], cwd=str(REPO_DIR),
-           capture_output=True, text=True, timeout=10)
-    
     r = sp.run(["git", "add", "tagihan.html", "template.html", "qris.png"],
                        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=10)
-    r = subprocess.run(["git", "commit", "-m", f"Auto: update tagihan"],
+    r = sp.run(["git", "commit", "-m", f"Auto: update tagihan"],
                        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=10)
     r = subprocess.run(["git", "push", "origin", "main"],
                        cwd=str(REPO_DIR), capture_output=True, text=True, timeout=20)
