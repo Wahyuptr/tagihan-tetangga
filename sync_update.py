@@ -90,8 +90,13 @@ def month_before(m_idx, y):
     return m, y
 
 
-def generate_history_rows(period_info):
-    """Generate riwayat dari bulan pertama billing sampai sekarang."""
+def generate_history_rows(period_info, current_status=None):
+    """Generate riwayat dari bulan pertama billing sampai sekarang.
+
+    current_status: status BARU yang sedang dirender. Wajib diisi oleh render(),
+    kalau tidak baris periode berjalan membaca badge dari file LAMA (jadi selalu
+    ketinggalan satu render — bug: badge LUNAS tapi tabel masih BELUM).
+    """
     end_m_idx = BLN_ID.index(period_info["end_month"])
     end_y = period_info["end_year"]
     start_m, start_y = BILLING_START
@@ -119,8 +124,8 @@ def generate_history_rows(period_info):
             break
 
         if key == (period_info["end_month"], period_info["end_year"]):
-            # Current period — follow badge status
-            current = read_current_status()
+            # Current period — follow status yang sedang dirender
+            current = current_status or read_current_status()
             cls = f"status-{current}"
             txt = "✅ LUNAS" if current == "lunas" else "❌ BELUM"
         elif key in status_map:
@@ -223,7 +228,7 @@ def render(status):
         "{{ STATUS_TEXT }}": "LUNAS" if status == "lunas" else "BELUM LUNAS",
         "{{ ALERT_HTML }}": build_alert_html(status, info),
         "{{ DESCRIPTION_HTML }}": build_description(status, info),
-        "{{ HISTORY_ROWS }}": generate_history_rows(info),
+        "{{ HISTORY_ROWS }}": generate_history_rows(info, status),
         "{{ UPDATE_TIME }}": now,
         "{{ DUE_TIMESTAMP }}": info["due_timestamp"],
         "{{ QRIS_SECTION }}": build_qris_section(),
