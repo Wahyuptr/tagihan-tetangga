@@ -2,393 +2,472 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tagihan Internet — Tetangga</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<meta name="robots" content="noindex">
+<title>Tagihan Internet Rumah</title>
 <style>
   :root {
-    --bg: #0f1117;
-    --card: #1a1d27;
-    --border: #2a2d3a;
-    --text: #e1e4ed;
-    --muted: #8b8fa3;
-    --green: #22c55e;
-    --red: #ef4444;
-    --amber: #f59e0b;
-    --blue: #60a5fa;
-    --radius: 12px;
+    --bg: #f4f6fb; --bg2: #e9edf7; --card: #ffffff; --border: #e3e7f0;
+    --text: #141a2e; --muted: #5d6680; --soft: #f7f8fc;
+    --brand: #4f46e5; --brand2: #7c3aed; --brand-soft: rgba(79,70,229,.10);
+    --green: #16a34a; --green-soft: rgba(22,163,74,.12);
+    --red: #dc2626; --red-soft: rgba(220,38,38,.10);
+    --amber: #d97706; --amber-soft: rgba(217,119,6,.12);
+    --shadow: 0 1px 2px rgba(20,26,46,.04), 0 8px 24px rgba(20,26,46,.06);
+    --r: 18px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1020; --bg2: #11182d; --card: #141b30; --border: #232c47;
+      --text: #e8ecf8; --muted: #9aa3bf; --soft: #1a2240;
+      --brand: #818cf8; --brand2: #a78bfa; --brand-soft: rgba(129,140,248,.14);
+      --green: #4ade80; --green-soft: rgba(74,222,128,.13);
+      --red: #f87171; --red-soft: rgba(248,113,113,.13);
+      --amber: #fbbf24; --amber-soft: rgba(251,191,36,.13);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.25);
+    }
   }
   * { margin: 0; padding: 0; box-sizing: border-box }
+  html { -webkit-text-size-adjust: 100% }
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, 'Segoe UI', sans-serif;
-    line-height: 1.6;
-    min-height: 100vh;
-    padding: 24px;
+    background: radial-gradient(1200px 500px at 50% -200px, var(--bg2), var(--bg));
+    color: var(--text); min-height: 100vh;
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    padding: 16px 16px 40px;
   }
-  .container { max-width: 560px; margin: 0 auto }
+  .wrap { max-width: 560px; margin: 0 auto }
+  a { color: var(--brand) }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .02em }
 
-  .header { text-align: center; padding: 32px 0 24px; }
-  .header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
-  .header .period { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+  /* header */
+  .top { display: flex; align-items: center; gap: 12px; padding: 8px 2px 18px }
+  .logo { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-size: 22px;
+          background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff; box-shadow: var(--shadow) }
+  .top h1 { font-size: 1.15rem; line-height: 1.2 }
+  .top p { color: var(--muted); font-size: .85rem }
 
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
-  .card h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+          box-shadow: var(--shadow); padding: 20px; margin-bottom: 14px }
+  .card h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted);
+             margin-bottom: 14px; display: flex; align-items: center; gap: 8px }
 
-  .status-row { display: flex; align-items: center; gap: 12px; }
-  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 100px; font-size: 0.85rem; font-weight: 600; }
-  .badge.lunas { background: rgba(34, 197, 94, 0.12); color: var(--green); }
-  .badge.belum { background: rgba(239, 68, 68, 0.12); color: var(--red); }
-  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  /* hero status */
+  .hero { position: relative; overflow: hidden; padding: 22px 20px 20px }
+  .hero::before { content: ""; position: absolute; inset: 0; opacity: .9; pointer-events: none;
+                  background: radial-gradient(400px 160px at 100% 0, var(--glow, var(--brand-soft)), transparent) }
+  .hero.lunas { --glow: var(--green-soft) } .hero.belum { --glow: var(--amber-soft) } .hero.telat { --glow: var(--red-soft) }
+  .hero > * { position: relative }
+  .pill, .badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px;
+          font-weight: 700; font-size: .82rem; letter-spacing: .02em }
+  .pill .dot, .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor }
+  .badge.lunas, .pill.lunas { background: var(--green-soft); color: var(--green) }
+  .badge.belum, .pill.belum { background: var(--amber-soft); color: var(--amber) }
+  .pill.telat, .badge.telat { background: var(--red-soft); color: var(--red) }
+  .badge.belum .dot, .badge.telat .dot { animation: blink 1.4s infinite }
+  @keyframes blink { 50% { opacity: .25 } }
+  .hero .period { color: var(--muted); font-size: .85rem; margin-top: 12px }
+  .amount { font-size: 2.3rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.15; margin: 4px 0 2px }
+  .amount small { font-size: .95rem; font-weight: 600; color: var(--muted); letter-spacing: 0 }
+  .hero .msg { font-size: .92rem; margin-top: 10px }
+  .count { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px }
+  .count div { background: var(--soft); border: 1px solid var(--border); border-radius: 12px; padding: 10px 6px; text-align: center }
+  .count b { display: block; font-size: 1.45rem; font-variant-numeric: tabular-nums; line-height: 1.2 }
+  .count span { font-size: .68rem; color: var(--muted); letter-spacing: .08em }
+  .bar { height: 6px; background: var(--soft); border-radius: 99px; margin-top: 14px; overflow: hidden }
+  .bar i { display: block; height: 100%; width: 0; border-radius: 99px;
+           background: linear-gradient(90deg, var(--brand), var(--brand2)); transition: width .6s }
+  .barcap { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 6px }
 
-  .info-grid { display: grid; grid-template-columns: 120px 1fr; gap: 8px 16px; font-size: 0.92rem; }
-  .info-grid .label { color: var(--muted) }
-  .info-grid .value { font-weight: 500 }
+  .alert { border-radius: 14px; padding: 12px 14px; font-size: .88rem; display: flex; gap: 10px; margin-bottom: 14px }
+  .alert.red { background: var(--red-soft); color: var(--red); border: 1px solid color-mix(in srgb, var(--red) 30%, transparent) }
+  .alert b { display: block }
 
-  .tariff-box { background: rgba(96, 165, 250, 0.06); border: 1px solid rgba(96, 165, 250, 0.15); border-radius: var(--radius); padding: 20px; text-align: center; }
-  .tariff-box .price { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; color: var(--blue); }
-  .tariff-box .period-label { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
-  .tariff-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; font-size: 0.85rem; color: var(--muted); }
-  .tariff-details span { color: var(--text); font-weight: 500 }
+  /* buttons */
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 14px;
+         border-radius: 12px; font-weight: 700; font-size: .9rem; text-decoration: none; border: 0; cursor: pointer;
+         color: #fff; background: var(--brand); font-family: inherit; transition: transform .1s, filter .2s }
+  .btn:active { transform: scale(.98) } .btn:hover { filter: brightness(1.07) }
+  .btn.wa { background: #1fa855 } .btn.tg { background: #229ed9 }
+  .btn.ghost { background: var(--soft); color: var(--text); border: 1px solid var(--border) }
+  .btn.full { grid-column: 1 / -1 }
 
-  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-  th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 0 10px; }
-  td { padding: 8px 0; border-top: 1px solid var(--border) }
-  td.status-lunas { color: var(--green); font-weight: 600 }
-  td.status-belum { color: var(--red); font-weight: 600 }
+  /* pay methods */
+  .pm { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border);
+        border-radius: 14px; margin-bottom: 8px; background: var(--soft) }
+  .pm .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 800;
+            font-size: .72rem; letter-spacing: -.02em; color: #fff; flex-shrink: 0 }
+  .pm .t { flex: 1; min-width: 0 }
+  .pm .n { font-weight: 700; font-size: .9rem }
+  .pm .v { font-size: .95rem } .pm .o { color: var(--muted); font-size: .76rem }
+  .copy { border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 10px;
+          padding: 8px 10px; font: 600 .78rem system-ui, sans-serif; cursor: pointer; flex-shrink: 0 }
+  .copy.ok { color: var(--green); border-color: var(--green) }
+  .qris { margin-top: 12px; border: 1px dashed var(--border); border-radius: 16px; padding: 14px; text-align: center }
+  .qris img { width: 220px; max-width: 100%; border-radius: 12px; background: #fff; padding: 8px }
+  .qris p { color: var(--muted); font-size: .8rem; margin-top: 6px }
+  .note { font-size: .82rem; color: var(--muted); margin-top: 10px }
 
-  .alert { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 16px; }
-  .alert.warn { background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); color: var(--amber); }
-  .alert.info { background: rgba(96, 165, 250, 0.08); border: 1px solid rgba(96, 165, 250, 0.2); }
-  .alert .icon { font-size: 1.2rem; flex-shrink: 0 }
+  /* steps */
+  .steps { counter-reset: s; list-style: none }
+  .steps li { position: relative; padding: 0 0 12px 38px; font-size: .9rem }
+  .steps li::before { counter-increment: s; content: counter(s); position: absolute; left: 0; top: -1px;
+                      width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+                      background: var(--brand-soft); color: var(--brand); font-weight: 800; font-size: .8rem }
 
-  .pay-method { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; transition: border-color 0.2s; }
-  .pay-method:hover { border-color: rgba(96, 165, 250, 0.3) }
-  .pay-icon { font-size: 1.5rem; flex-shrink: 0 }
-  .pay-name { font-weight: 600; font-size: 0.92rem; margin-bottom: 2px; }
-  .pay-detail { color: var(--muted); font-size: 0.82rem; font-family: monospace; }
+  /* plan */
+  .plan { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+  .plan div { background: var(--soft); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px }
+  .plan span { display: block; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em }
+  .plan b { font-size: 1rem }
 
-  .footer { text-align: center; color: var(--muted); font-size: 0.78rem; padding: 24px 0; }
+  /* history */
+  .hist { width: 100%; border-collapse: collapse; font-size: .88rem }
+  .hist th { text-align: left; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+             font-weight: 600; padding: 0 0 8px }
+  .hist td { padding: 10px 0; border-top: 1px solid var(--border); vertical-align: middle }
+  .hist td:last-child { text-align: right; white-space: nowrap }
+  .hist td:first-child { white-space: nowrap }
+  .tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: .74rem; font-weight: 700 }
+  .tag.lunas, td.status-lunas .tag { background: var(--green-soft); color: var(--green) }
+  .tag.belum, td.status-belum .tag { background: var(--amber-soft); color: var(--amber) }
+  .tag.telat { background: var(--red-soft); color: var(--red) }
+  .link { background: none; border: 0; color: var(--brand); font: 600 .8rem system-ui, sans-serif; cursor: pointer; padding: 4px 0 4px 6px; text-decoration: underline }
 
-  @media (max-width: 480px) {
-    body { padding: 12px }
-    .card { padding: 18px }
-    .info-grid { grid-template-columns: 100px 1fr }
+  /* faq */
+  details { border-top: 1px solid var(--border); padding: 12px 0 }
+  details:first-of-type { border-top: 0; padding-top: 0 }
+  summary { cursor: pointer; font-weight: 600; font-size: .92rem; list-style: none; display: flex; justify-content: space-between; gap: 10px }
+  summary::-webkit-details-marker { display: none }
+  summary::after { content: "+"; color: var(--muted); font-weight: 400; font-size: 1.2rem; line-height: 1 }
+  details[open] summary::after { content: "–" }
+  details p, details ul { color: var(--muted); font-size: .88rem; margin-top: 8px }
+  details ul { padding-left: 18px }
+
+  .foot { text-align: center; color: var(--muted); font-size: .75rem; margin-top: 18px; line-height: 1.7 }
+
+  /* receipt modal */
+  .modal { position: fixed; inset: 0; background: rgba(5,8,20,.6); display: none; align-items: center;
+           justify-content: center; padding: 16px; z-index: 50 }
+  .modal.on { display: flex }
+  .receipt { background: #fff; color: #111; width: 100%; max-width: 380px; border-radius: 16px; padding: 22px;
+             box-shadow: 0 20px 60px rgba(0,0,0,.35) }
+  .receipt h3 { text-align: center; font-size: 1.05rem } .receipt .sub { text-align: center; color: #666; font-size: .78rem; margin-bottom: 14px }
+  .receipt .row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dashed #ddd; font-size: .88rem }
+  .receipt .row span:first-child { color: #666 }
+  .receipt .stamp { margin: 16px auto 4px; width: max-content; border: 3px solid #16a34a; color: #16a34a; font-weight: 900;
+                    letter-spacing: .2em; padding: 4px 14px; border-radius: 8px; transform: rotate(-6deg) }
+  .receipt .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px }
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(80px); background: #111827; color: #fff;
+           padding: 10px 16px; border-radius: 12px; font-size: .85rem; transition: transform .25s; z-index: 60 }
+  .toast.on { transform: translateX(-50%) translateY(0) }
+  .nojs-hide { display: none }
+
+  @media print {
+    body { background: #fff; padding: 0 } .wrap, .toast { display: none !important }
+    .modal { position: static; display: block !important; background: none; padding: 0 }
+    .receipt { box-shadow: none; margin: 0 auto } .receipt .acts { display: none }
   }
-
-  /* ── Pop-up Jatuh Tempo ── */
-  .popup-overlay {
-    display: none;
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 9999;
-    justify-content: center; align-items: center;
-  }
-  .popup-overlay.active { display: flex }
-  .popup-box {
-    background: var(--card);
-    border: 1px solid var(--amber);
-    border-radius: var(--radius);
-    padding: 28px 24px;
-    max-width: 400px; width: 90%;
-    text-align: center;
-    animation: popIn 0.3s ease;
-  }
-  @keyframes popIn {
-    from { transform: scale(0.9); opacity: 0 }
-    to   { transform: scale(1); opacity: 1 }
-  }
-  .popup-box .emoji { font-size: 3rem; margin-bottom: 12px }
-  .popup-box h3 { font-size: 1.2rem; margin-bottom: 8px; color: var(--amber) }
-  .popup-box p { font-size: 0.9rem; color: var(--muted); margin-bottom: 18px; line-height: 1.5 }
-  .popup-btn {
-    display: inline-block; width: 100%;
-    background: var(--amber); color: #000;
-    padding: 12px; border: none; border-radius: 8px;
-    font-weight: 700; font-size: 0.95rem;
-    cursor: pointer; text-decoration: none;
-    margin-bottom: 8px;
-  }
-  .popup-btn:hover { opacity: 0.9 }
-  .popup-close {
-    background: transparent; color: var(--muted);
-    border: 1px solid var(--border); padding: 8px 16px;
-    border-radius: 8px; cursor: pointer; font-size: 0.85rem
-  }
-
+  @media (max-width: 380px) { .amount { font-size: 2rem } .btns { grid-template-columns: 1fr } }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
 
-  <div class="header">
-    <h1>💻 Tagihan Internet</h1>
-    <p class="period">Periode: <strong>{{ PERIOD_RANGE }}</strong></p>
+  <header class="top">
+    <div class="logo">📶</div>
+    <div>
+      <h1>Tagihan Internet Rumah</h1>
+      <p>Pelanggan: <b id="cust">{{ CUSTOMER }}</b></p>
+    </div>
+  </header>
+
+  <div id="overdue" class="alert red" style="display:none">
+    <span>🚫</span>
+    <div><b>Internet diputus otomatis</b>Tagihan periode ini belum dibayar setelah jatuh tempo. Begitu pembayaran dikonfirmasi, internet langsung aktif kembali.</div>
   </div>
 
-  {{ ALERT_HTML }}
-
-  <div class="card">
-    <h2>Status Bulan Ini</h2>
-    <div class="status-row">
-      <div class="badge {{ STATUS_CLASS }}">
-        <span class="dot"></span> {{ STATUS_TEXT }}
+  <!-- STATUS (diisi ulang otomatis oleh skrip sesuai tanggal hari ini) -->
+  <section id="hero" class="card hero {{ STATUS_CLASS }}">
+    <div class="badge {{ STATUS_CLASS }}" id="pill"><span class="dot"></span><span id="pill-text">{{ STATUS_TEXT }}</span></div>
+    <p class="period">Periode <b id="period">{{ PERIOD_RANGE }}</b></p>
+    <div class="amount" id="amount">{{ AMOUNT }} <small>/ bulan</small></div>
+    <p class="msg" id="msg">{{ STATUS_MESSAGE }}</p>
+    <div id="cd-wrap">
+      <div class="count">
+        <div><b id="cd-d">--</b><span>HARI</span></div>
+        <div><b id="cd-h">--</b><span>JAM</span></div>
+        <div><b id="cd-m">--</b><span>MENIT</span></div>
       </div>
-      <span style="color:var(--muted);font-size:0.85rem">{{ PERIOD_LABEL }}</span>
+      <div class="bar"><i id="bar"></i></div>
+      <div class="barcap"><span id="bar-a"></span><span id="bar-b"></span></div>
     </div>
-    <p style="margin-top:12px;font-size:0.88rem;color:var(--muted)">
-{{ DESCRIPTION_HTML }}
-    </p>
-  </div>
-
-  <div class="card">
-    <h2>Data Pelanggan</h2>
-    <div class="info-grid">
-      <div class="label">Nama</div>          <div class="value">radjamalik</div>
-      <div class="label">Layanan</div>       <div class="value">Internet Rumah</div>
-      <div class="label">Tipe</div>          <div class="value">PPPoE (Kabel LAN)</div>
-      <div class="label">IP Address</div>    <div class="value" style="font-family:monospace">192.168.95.50</div>
-      <div class="label">MAC</div>           <div class="value" style="font-family:monospace;font-size:0.82rem">6C:5A:B0:B7:7B:D3</div>
-      <div class="label">Port</div>          <div class="value">ether5</div>
+    <div class="btns">
+      <a class="btn wa" id="wa-confirm" target="_blank" rel="noopener" href="https://wa.me/{{ WA_OWNER }}">💬 Konfirmasi via WhatsApp</a>
+      <a class="btn tg" id="tg-confirm" target="_blank" rel="noopener" href="https://t.me/{{ TG_OWNER }}">✈️ Konfirmasi via Telegram</a>
+      <button class="btn ghost full nojs-hide" id="ics">📅 Pasang pengingat bulanan di kalender HP</button>
     </div>
-  </div>
+  </section>
 
-  <div class="card">
-    <h2>Tarif Bulanan</h2>
-    <div class="tariff-box">
-      <div class="price">Rp 150.000</div>
-      <div class="period-label">per bulan</div>
-      <div class="tariff-details">
-        <div>Download: <span>45 Mbps</span></div>
-        <div>Upload: <span>15 Mbps</span></div>
-        <div>FUP: <span>Unlimited</span></div>
-        <div>Kontrak: <span>Bulanan</span></div>
-      </div>
+  <!-- CARA BAYAR -->
+  <section class="card" id="bayar">
+    <h2>💳 Cara Bayar</h2>
+    <ol class="steps">
+      <li>Transfer <b id="step-amt">{{ AMOUNT }}</b> ke salah satu rekening di bawah, atau scan QRIS.</li>
+      <li>Simpan / screenshot bukti transfer.</li>
+      <li>Tekan <b>Konfirmasi via WhatsApp</b> di atas &amp; kirim buktinya. Status di halaman ini berubah jadi <b>LUNAS</b>.</li>
+    </ol>
+
+    <div class="pm">
+      <div class="ic" style="background:#00529c">BRI</div>
+      <div class="t"><div class="n">Bank BRI</div><div class="v mono">7853 0100 7367 530</div><div class="o">a/n WAHYU PRATAMA PUTRA</div></div>
+      <button class="copy nojs-hide" data-copy="785301007367530">Salin</button>
     </div>
-    <p style="margin-top:12px;font-size:0.82rem;color:var(--muted);text-align:center">
-      ⚡ Kecepatan turun ke <strong>5 Mbps</strong> saat jaringan utama failover ke backup
-    </p>
-  </div>
-
-  <div class="card">
-    <h2>Riwayat Pembayaran</h2>
-    <table>
-      <thead>
-        <tr><th>Bulan</th><th>Status</th><th>Jatuh Tempo</th></tr>
-      </thead>
-      <tbody>
-{{ HISTORY_ROWS }}
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h2>Metode Pembayaran</h2>
-
-    <div class="pay-method">
-      <div class="pay-icon">🏦</div>
-      <div class="pay-info">
-        <div class="pay-name">Transfer Bank BRI</div>
-        <div class="pay-detail">7853 0100 7367 530 · a/n <strong>WAHYU PRATAMA PUTRA</strong></div>
-      </div>
+    <div class="pm">
+      <div class="ic" style="background:#00aa13">Go</div>
+      <div class="t"><div class="n">GoPay</div><div class="v mono">0813 8634 1923</div><div class="o">a/n WAHYU PRATAMA PUTRA</div></div>
+      <button class="copy nojs-hide" data-copy="081386341923">Salin</button>
     </div>
-
-    <div class="pay-method">
-      <div class="pay-icon">🟢</div>
-      <div class="pay-info">
-        <div class="pay-name">GoPay</div>
-        <div class="pay-detail">0813 8634 1923 · a/n <strong>WAHYU PRATAMA PUTRA</strong></div>
-      </div>
+    <div class="pm">
+      <div class="ic" style="background:#118eea">DANA</div>
+      <div class="t"><div class="n">DANA</div><div class="v mono">0851 5662 2541</div><div class="o">a/n WAHYU PRATAMA PUTRA</div></div>
+      <button class="copy nojs-hide" data-copy="085156622541">Salin</button>
     </div>
-
-    <div class="pay-method">
-      <div class="pay-icon">🔵</div>
-      <div class="pay-info">
-        <div class="pay-name">DANA</div>
-        <div class="pay-detail">0851 5662 2541 · a/n <strong>WAHYU PRATAMA PUTRA</strong></div>
-      </div>
-    </div>
-
-    <div class="pay-method">
-      <div class="pay-icon">📱</div>
-      <div class="pay-info">
-        <div class="pay-name">QRIS (Scan Langsung)</div>
-        <div class="pay-detail">Scan kode QR di bawah — semua e-wallet & mobile banking support QRIS</div>
-      </div>
+    <div class="pm">
+      <div class="ic" style="background:linear-gradient(135deg,var(--brand),var(--brand2))">Rp</div>
+      <div class="t"><div class="n">Jumlah transfer</div><div class="v mono" id="amt-plain">{{ AMOUNT }}</div><div class="o">Tanpa kode unik — nominal pas</div></div>
+      <button class="copy nojs-hide" id="copy-amt" data-copy="{{ AMOUNT_RAW }}">Salin</button>
     </div>
 
     {{ QRIS_SECTION }}
+    <p class="note">💡 Di berita transfer, tulis <b id="memo">Internet {{ PERIOD_LABEL }}</b> supaya mudah dicek.</p>
+  </section>
 
-    <div class="alert info" style="margin-top:16px;margin-bottom:0">
-      <span class="icon">ℹ️</span>
-      <div>
-        Konfirmasi setelah bayar: hubungi pemilik jaringan.<br>
-        Status <strong>LUNAS</strong> langsung diperbarui & internet dibuka.
-      </div>
+  <!-- PAKET -->
+  <section class="card">
+    <h2>🚀 Paket Internet</h2>
+    <div class="plan">
+      <div><span>Kecepatan</span><b>hingga {{ SPEED_MAX }} Mbps</b></div>
+      <div><span>Terjamin minimal</span><b>{{ SPEED_MIN }} Mbps</b></div>
+      <div><span>Kuota</span><b>Unlimited</b></div>
+      <div><span>Koneksi</span><b>Kabel LAN</b></div>
     </div>
-  </div>
-
-
-  <!-- POP-UP JATUH TEMPO -->
-  <div id="due-popup" class="popup-overlay">
-    <div class="popup-box">
-      <div class="emoji">⚠️</div>
-      <h3 id="popup-title">Jatuh Tempo Hampir Tiba!</h3>
-      <p id="popup-msg">Segera lakukan pembayaran sebelum internet diputus.</p>
-      <a href="https://t.me/whayuptr?text=Saya+sudah+bayar+tagihan+internet+bulan+ini.+Mohon+diaktifkan."
-         target="_blank" class="popup-btn">
-        💬 Konfirmasi via Telegram
-      </a>
-      <a href="https://wa.me/6281386341923?text=Halo%2C+saya+sudah+bayar+tagihan+internet.+Berikut+bukti+transfer%3A"
-         target="_blank" class="popup-btn" style="background:#25D366">
-        🟢 Konfirmasi via WhatsApp
-      </a>
-      <button class="popup-close" onclick="closePopup()">Tutup</button>
+    <p class="note">Jika jaringan utama gangguan, internet otomatis tetap jalan lewat jalur cadangan dengan kecepatan lebih rendah.</p>
+    <div class="btns" style="margin-top:12px">
+      <a class="btn ghost full" href="https://fast.com" target="_blank" rel="noopener">⚡ Tes kecepatan sekarang (fast.com)</a>
     </div>
-  </div>
+  </section>
 
-  <!-- COUNTDOWN + BUKTI BAYAR -->
-  <div class="card">
-    <h2>⏳ Hitung Mundur Jatuh Tempo</h2>
-    <div id="countdown" style="text-align:center;padding:12px 0">
-      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
-        <div style="background:rgba(245,158,11,0.1);border-radius:8px;padding:12px 16px;min-width:60px">
-          <div id="cd-days" style="font-size:1.5rem;font-weight:700;color:var(--amber)">--</div>
-          <div style="font-size:0.7rem;color:var(--muted)">HARI</div>
-        </div>
-        <div style="background:rgba(245,158,11,0.1);border-radius:8px;padding:12px 16px;min-width:60px">
-          <div id="cd-hours" style="font-size:1.5rem;font-weight:700;color:var(--amber)">--</div>
-          <div style="font-size:0.7rem;color:var(--muted)">JAM</div>
-        </div>
-        <div style="background:rgba(245,158,11,0.1);border-radius:8px;padding:12px 16px;min-width:60px">
-          <div id="cd-mins" style="font-size:1.5rem;font-weight:700;color:var(--amber)">--</div>
-          <div style="font-size:0.7rem;color:var(--muted)">MENIT</div>
-        </div>
-      </div>
-      <p id="cd-status" style="margin-top:10px;font-size:0.85rem;color:var(--muted)"></p>
-    </div>
-    <span id="due-target" style="display:none">{{ DUE_TIMESTAMP }}</span>
-  </div>
+  <!-- RIWAYAT -->
+  <section class="card">
+    <h2>🧾 Riwayat Pembayaran</h2>
+    <table class="hist">
+      <thead><tr><th>Periode</th><th>Dibayar</th><th>Status</th></tr></thead>
+      <tbody id="hist">
+{{ HISTORY_ROWS }}
+      </tbody>
+    </table>
+    <p class="note nojs-hide" id="hist-note">Ketuk <b>Kuitansi</b> untuk melihat / menyimpan bukti lunas.</p>
+  </section>
 
-  <div class="card">
-    <h2>📎 Kirim Bukti Pembayaran</h2>
-    <p style="font-size:0.88rem;color:var(--muted);margin-bottom:14px">
-      Setelah transfer, kirim screenshot bukti bayar via WhatsApp atau Telegram.
-    </p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <a href="https://wa.me/6281386341923?text=Halo%2C+saya+sudah+bayar+tagihan+internet.+Berikut+bukti+transfer%3A"
-         target="_blank"
-         style="flex:1;min-width:140px;display:flex;align-items:center;justify-content:center;gap:8px;
-                background:#25D366;color:#fff;padding:12px 16px;border-radius:8px;
-                text-decoration:none;font-weight:600;font-size:0.9rem">
-        🟢 WhatsApp
-      </a>
-      <a href="https://t.me/whayuptr"
-         target="_blank"
-         style="flex:1;min-width:140px;display:flex;align-items:center;justify-content:center;gap:8px;
-                background:#2AABEE;color:#fff;padding:12px 16px;border-radius:8px;
-                text-decoration:none;font-weight:600;font-size:0.9rem">
-        🔵 Telegram
-      </a>
-    </div>
-    <p style="margin-top:12px;font-size:0.78rem;color:var(--muted);text-align:center">
-      Status <strong>LUNAS</strong> akan diperbarui maksimal 5 menit setelah konfirmasi.
-    </p>
-  </div>
+  <!-- BANTUAN -->
+  <section class="card">
+    <h2>🛟 Bantuan</h2>
+    <details>
+      <summary>Internet mati atau lambat?</summary>
+      <ul>
+        <li>Cabut colokan listrik router/Wi-Fi di rumah, tunggu 10 detik, colok lagi. Tunggu 2 menit.</li>
+        <li>Pastikan kabel LAN dari rumah sebelah terpasang kencang (lampu port menyala).</li>
+        <li>Coba tes kecepatan di <a href="https://fast.com" target="_blank" rel="noopener">fast.com</a> dari HP yang tersambung Wi-Fi rumah.</li>
+        <li>Masih bermasalah? Kirim pesan WhatsApp — sertakan jam kejadiannya.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Kapan harus bayar?</summary>
+      <p>Setiap bulan, paling lambat tanggal <b>15</b> (jam 23:59). Periode tagihan berjalan dari tanggal 16 ke tanggal 16 bulan berikutnya.</p>
+    </details>
+    <details>
+      <summary>Bagaimana kalau terlambat?</summary>
+      <p>Mulai tanggal 16 jam 00:00 internet diputus otomatis oleh sistem. Setelah bayar dan konfirmasi, internet dibuka kembali — tidak ada denda.</p>
+    </details>
+    <details>
+      <summary>Sudah bayar tapi status belum LUNAS?</summary>
+      <p>Status diperbarui setelah pembayaran dicek pemilik jaringan. Kalau lebih dari beberapa jam belum berubah, kirim ulang bukti transfer lewat WhatsApp.</p>
+    </details>
+    <details>
+      <summary>Mau berhenti atau ganti paket?</summary>
+      <p>Hubungi pemilik jaringan lewat WhatsApp minimal 1 minggu sebelum periode baru (tanggal 16).</p>
+    </details>
+  </section>
 
-  <div class="footer">
-    🏠 Jaringan Tetangga · Managed by MikroTik hAP ax²<br>
-    Auto-billing aktif · Diputus otomatis jika belum bayar<br>
-    <span style="font-size:0.7rem">Update: {{ UPDATE_TIME }}</span>
-  </div>
-
+  <footer class="foot">
+    Halaman ini diperbarui otomatis · terakhir <span id="updated">{{ UPDATE_TIME }}</span><br>
+    Waktu ditampilkan dalam WIB
+  </footer>
 </div>
 
+<!-- KUITANSI -->
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="receipt">
+    <h3>Kuitansi Pembayaran Internet</h3>
+    <div class="sub">Bukti lunas — dibuat dari halaman tagihan</div>
+    <div class="row"><span>Pelanggan</span><b id="r-cust"></b></div>
+    <div class="row"><span>Periode</span><b id="r-period"></b></div>
+    <div class="row"><span>Tanggal bayar</span><b id="r-date"></b></div>
+    <div class="row"><span>Jumlah</span><b id="r-amt"></b></div>
+    <div class="row"><span>No. kuitansi</span><b id="r-no" class="mono"></b></div>
+    <div class="stamp">LUNAS</div>
+    <div class="acts">
+      <button class="btn" onclick="window.print()">🖨️ Simpan / Cetak</button>
+      <button class="btn ghost" id="r-close">Tutup</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script id="billing-data" type="application/json">{{ BILLING_DATA }}</script>
 <script>
-// ── Countdown to due date ──
-(function() {
-  var el = document.getElementById('due-target');
-  if (!el) return;
-  var target = new Date(el.textContent.trim());
-  if (isNaN(target.getTime())) return;
+(function () {
+  "use strict";
+  var D;
+  try { D = JSON.parse(document.getElementById("billing-data").textContent); } catch (e) { return; }
+  var BLN = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  var HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  var DUE = D.due_day || 16;
+  var $ = function (id) { return document.getElementById(id); };
+  var rp = function (n) { return "Rp " + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
+  var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  document.querySelectorAll(".nojs-hide").forEach(function (el) { el.classList.remove("nojs-hide"); });
 
-  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  // "Sekarang" dalam WIB (UTC+7), tidak tergantung zona waktu HP.
+  function wibNow() { var d = new Date(); return new Date(d.getTime() + d.getTimezoneOffset() * 60000 + 7 * 3600000); }
+  function ymKey(y, m) { return y + "-" + pad(m); }
+  function addMonth(y, m, k) { var t = y * 12 + (m - 1) + k; return [Math.floor(t / 12), t % 12 + 1]; }
+  // Periode berjalan: berakhir tgl 16 bulan ini (sebelum tgl 16) atau bulan depan (mulai tgl 16).
+  var now = wibNow();
+  var end = now.getDate() >= DUE ? addMonth(now.getFullYear(), now.getMonth() + 1, 1) : [now.getFullYear(), now.getMonth() + 1];
+  var start = addMonth(end[0], end[1], -1);
+  var key = ymKey(end[0], end[1]);
+  var paid = D.paid || {};
+  var isPaid = Object.prototype.hasOwnProperty.call(paid, key);
+  // Batas akhir = tgl 16 00:00 WIB periode berjalan (dibandingkan dengan jam WIB).
+  var dueAt = new Date(end[0], end[1] - 1, DUE, 0, 0, 0);
+  var startAt = new Date(start[0], start[1] - 1, DUE, 0, 0, 0);
+  var lastDay = new Date(dueAt.getTime() - 86400000);
+  var label = BLN[end[1]] + " " + end[0];
+  var fmtDay = function (d) { return HARI[d.getDay()] + ", " + d.getDate() + " " + BLN[d.getMonth() + 1] + " " + d.getFullYear(); };
+  // Tunggakan = periode SEBELUMNYA yang belum lunas (router memutus internet mulai tgl 16).
+  var sm0 = (D.billing_start || "2026-06").split("-"), arrears = [];
+  for (var q = addMonth(end[0], end[1], -1); q[0] * 12 + q[1] >= (+sm0[0]) * 12 + (+sm0[1]); q = addMonth(q[0], q[1], -1)) {
+    if (!Object.prototype.hasOwnProperty.call(paid, ymKey(q[0], q[1]))) arrears.push(q);
+  }
+  var overdue = arrears.length > 0;
 
-  var popupShown = false;
+  $("cust").textContent = D.customer || $("cust").textContent;
+  $("period").textContent = DUE + " " + BLN[start[1]] + " – " + DUE + " " + BLN[end[1]] + " " + end[0];
+  $("amount").firstChild.nodeValue = rp(D.amount) + " ";
+  $("step-amt").textContent = rp(D.amount); $("amt-plain").textContent = rp(D.amount);
+  $("copy-amt").setAttribute("data-copy", String(D.amount));
+  $("memo").textContent = "Internet " + label;
 
+  var hero = $("hero"), pill = $("pill");
+  hero.classList.remove("lunas", "belum"); pill.classList.remove("lunas", "belum", "telat");
+  var cls = overdue ? "telat" : (isPaid ? "lunas" : "belum");
+  hero.classList.add(cls); pill.classList.add(cls);
+  $("pill-text").textContent = overdue ? "ADA TUNGGAKAN" : (isPaid ? "LUNAS" : "BELUM DIBAYAR");
+  if (overdue) {
+    $("overdue").style.display = "flex";
+    $("overdue").querySelector("div").innerHTML = "<b>Ada tagihan tertunggak: " +
+      arrears.map(function (a) { return BLN[a[1]] + " " + a[0]; }).reverse().join(", ") + " (" + rp(D.amount * arrears.length) + ")</b>" +
+      "Internet diputus otomatis sampai tunggakan dibayar. Setelah pembayaran dikonfirmasi, internet langsung aktif kembali.";
+  }
+
+  var msgEl = $("msg");
+  if (isPaid) {
+    var nxt = addMonth(end[0], end[1], 1);
+    msgEl.innerHTML = "✅ Terima kasih! Tagihan <b>" + label + "</b> sudah lunas" +
+      (paid[key] ? " (dibayar " + fmtDate(paid[key]) + ")" : "") +
+      ". Tagihan berikutnya <b>" + BLN[nxt[1]] + " " + nxt[0] + "</b>, batas bayar " + (DUE - 1) + " " + BLN[nxt[1]] + ".";
+  } else {
+    msgEl.innerHTML = "Bayar paling lambat <b>" + fmtDay(lastDay) + "</b> pukul 23:59 WIB. Lewat dari itu internet diputus otomatis.";
+  }
+  function fmtDate(iso) { var p = String(iso).split("-"); return p.length === 3 ? (+p[2]) + " " + BLN[+p[1]] + " " + p[0] : iso; }
+
+  // hitung mundur ke batas bayar (kalau lunas: ke awal periode berikutnya)
+  var target = dueAt;
+  $("bar-a").textContent = DUE + " " + BLN[start[1]].slice(0, 3);
+  $("bar-b").textContent = isPaid ? "periode baru " + DUE + " " + BLN[end[1]].slice(0, 3) : "batas " + (DUE - 1) + " " + BLN[end[1]].slice(0, 3);
   function tick() {
-    var now = new Date();
-    var diff = target - now;
-
-    var daysEl = document.getElementById('cd-days');
-    var hoursEl = document.getElementById('cd-hours');
-    var minsEl = document.getElementById('cd-mins');
-    var statusEl = document.getElementById('cd-status');
-
-    // Compute days left
-    var daysLeft = Math.floor(diff / 86400000);
-
-    if (diff <= 0) {
-      daysEl.textContent = '00'; hoursEl.textContent = '00'; minsEl.textContent = '00';
-      statusEl.innerHTML = '⚠️ <strong>Jatuh tempo telah lewat!</strong> Internet mungkin telah diputus. Segera lakukan pembayaran.';
-      // Show popup on overdue
-      if (!popupShown) { showPopup(-1); popupShown = true; }
-      return;
-    }
-
-    var hours = Math.floor((diff % 86400000) / 3600000);
-    var mins = Math.floor((diff % 3600000) / 60000);
-
-    daysEl.textContent = pad(daysLeft);
-    hoursEl.textContent = pad(hours);
-    minsEl.textContent = pad(mins);
-
-    if (daysLeft > 3) {
-      statusEl.innerHTML = '⏳ ' + daysLeft + ' hari lagi sebelum jatuh tempo.';
-    } else if (daysLeft > 0) {
-      statusEl.innerHTML = '⚠️ Tinggal <strong>' + daysLeft + ' hari</strong> lagi! Segera lunasi.';
-      if (!popupShown) { showPopup(daysLeft); popupShown = true; }
-    } else {
-      statusEl.innerHTML = '🚨 <strong>Jatuh tempo hari ini!</strong> Bayar sekarang sebelum internet diputus.';
-      if (!popupShown) { showPopup(0); popupShown = true; }
-    }
+    var n = wibNow(), diff = Math.max(0, target - n);
+    $("cd-d").textContent = pad(Math.floor(diff / 86400000));
+    $("cd-h").textContent = pad(Math.floor(diff % 86400000 / 3600000));
+    $("cd-m").textContent = pad(Math.floor(diff % 3600000 / 60000));
+    var pct = Math.min(100, Math.max(0, (n - startAt) / (dueAt - startAt) * 100));
+    $("bar").style.width = pct.toFixed(1) + "%";
   }
+  tick(); setInterval(tick, 30000);
 
-  function showPopup(daysLeft) {
-    var overlay = document.getElementById('due-popup');
-    var title = document.getElementById('popup-title');
-    var msg = document.getElementById('popup-msg');
-    if (!overlay) return;
-    if (daysLeft <= 0) {
-      title.textContent = '🚨 Jatuh Tempo Terlewat!';
-      msg.innerHTML = 'Internet mungkin telah <strong>diputus</strong>. Segera bayar dan konfirmasi via Telegram untuk mengaktifkan kembali.';
-    } else if (daysLeft === 1) {
-      title.textContent = '⚠️ Tinggal 1 Hari Lagi!';
-      msg.innerHTML = 'Jatuh tempo <strong>besok</strong>. Bayar sekarang sebelum internet diputus.';
-    } else {
-      title.textContent = '⏰ ' + daysLeft + ' Hari Menuju Jatuh Tempo';
-      msg.innerHTML = 'Segera lunasi tagihan internet. Setelah jatuh tempo, akses internet <strong>otomatis diputus</strong>.';
-    }
-    overlay.classList.add('active');
-  }
+  // pesan konfirmasi siap kirim
+  var owe = arrears.map(function (a) { return BLN[a[1]] + " " + a[0]; }).reverse();
+  if (!isPaid) owe.push(label);
+  var text = "Halo, saya " + (D.customer || "") + " sudah transfer tagihan internet periode " + (owe.join(" + ") || label) +
+             " sebesar " + rp(D.amount * Math.max(1, owe.length)) + ". Berikut bukti transfernya:";
+  $("wa-confirm").href = "https://wa.me/" + D.wa_owner + "?text=" + encodeURIComponent(text);
+  $("tg-confirm").href = "https://t.me/" + D.tg_owner;
+  if (isPaid && !overdue) { $("wa-confirm").textContent = "💬 Hubungi via WhatsApp"; $("wa-confirm").href = "https://wa.me/" + D.wa_owner; }
 
-  window.closePopup = function() {
-    document.getElementById('due-popup').classList.remove('active');
-  };
-
-  // Close popup when clicking outside
-  document.getElementById('due-popup').addEventListener('click', function(e) {
-    if (e.target === this) closePopup();
+  // salin
+  function toast(t) { var el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove("on"); }, 1800); }
+  document.querySelectorAll(".copy").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var v = b.getAttribute("data-copy"), done = function () { b.textContent = "Tersalin ✓"; b.classList.add("ok"); toast("Disalin: " + v); setTimeout(function () { b.textContent = "Salin"; b.classList.remove("ok"); }, 1800); };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(v).then(done, fallback); else fallback();
+      function fallback() { var ta = document.createElement("textarea"); ta.value = v; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (e) { toast(v); } document.body.removeChild(ta); }
+    });
   });
 
-  // Only show popup if status is NOT lunas
-  var badgeEl = document.querySelector('.badge');
-  if (badgeEl && badgeEl.classList.contains('lunas')) {
-    popupShown = true; // Don't bother if already paid
-  }
+  // pengingat kalender (.ics) — tiap tgl 13 jam 19:00, berulang bulanan
+  $("ics").addEventListener("click", function () {
+    var n = wibNow(), y = n.getFullYear(), m = n.getMonth() + 1;
+    if (n.getDate() >= 13) { var a = addMonth(y, m, 1); y = a[0]; m = a[1]; }
+    var dt = y + pad(m) + "13T190000";
+    var ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//tagihan-internet//ID", "BEGIN:VEVENT",
+      "UID:tagihan-internet-" + dt + "@rumah", "DTSTAMP:" + dt, "DTSTART;TZID=Asia/Jakarta:" + dt, "DURATION:PT30M",
+      "RRULE:FREQ=MONTHLY;BYMONTHDAY=13", "SUMMARY:Bayar internet rumah (" + rp(D.amount) + ")",
+      "DESCRIPTION:Batas bayar tanggal 15. Halaman tagihan: " + location.href.split("#")[0],
+      "BEGIN:VALARM", "TRIGGER:-PT0M", "ACTION:DISPLAY", "DESCRIPTION:Bayar internet rumah", "END:VALARM",
+      "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+    a.download = "pengingat-bayar-internet.ics"; document.body.appendChild(a); a.click(); a.remove();
+    toast("Buka file yang terunduh untuk menambah ke kalender");
+  });
 
-  tick();
-  setInterval(tick, 60000);
+  // riwayat dari data (terbaru di atas)
+  var sm = (D.billing_start || "2026-06").split("-"), rows = [], p = [end[0], end[1]];
+  while (p[0] * 12 + p[1] >= (+sm[0]) * 12 + (+sm[1])) {
+    var k = ymKey(p[0], p[1]), has = Object.prototype.hasOwnProperty.call(paid, k), cur = k === key;
+    var st = has ? '<span class="tag lunas">LUNAS</span> <button class="link" data-k="' + k + '">Kuitansi</button>'
+                 : (cur ? '<span class="tag belum">BELUM</span>' : '<span class="tag telat">BELUM</span>');
+    rows.push("<tr><td>" + BLN[p[1]] + " " + p[0] + "</td><td>" + (has && paid[k] ? fmtDate(paid[k]) : (has ? "—" : "")) + "</td><td>" + st + "</td></tr>");
+    p = addMonth(p[0], p[1], -1);
+  }
+  $("hist").innerHTML = rows.join("");
+
+  // kuitansi
+  $("hist").addEventListener("click", function (e) {
+    var k = e.target.getAttribute && e.target.getAttribute("data-k"); if (!k) return;
+    var y = +k.split("-")[0], m = +k.split("-")[1], s = addMonth(y, m, -1);
+    $("r-cust").textContent = D.customer;
+    $("r-period").textContent = DUE + " " + BLN[s[1]].slice(0, 3) + " – " + DUE + " " + BLN[m].slice(0, 3) + " " + y;
+    $("r-date").textContent = paid[k] ? fmtDate(paid[k]) : "—";
+    $("r-amt").textContent = rp(D.amount);
+    $("r-no").textContent = "INV-" + k.replace("-", "") + "-" + String(D.customer || "x").replace(/\W/g, "").slice(0, 4).toUpperCase();
+    $("modal").classList.add("on");
+  });
+  $("r-close").addEventListener("click", function () { $("modal").classList.remove("on"); });
+  $("modal").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("on"); });
 })();
 </script>
 </body>

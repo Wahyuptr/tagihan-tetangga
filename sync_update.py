@@ -1,15 +1,22 @@
 """Sync billing status → render tagihan.html dari template + git push
 
 Semua periode & tanggal dihitung OTOMATIS dari tanggal sistem.
-Periode billing: 16-ke-16. Jatuh tempo selalu tanggal 16.
+Periode billing: 16-ke-16. Batas bayar tanggal 15 (router memutus mulai tgl 16 00:00).
+Kunci periode = bulan AKHIR periode, sama dengan tag router: periode 16 Sep–16 Okt 2026
+= "2026-10" = komentar PPPoE LUNAS-10-2026.
+
+Data (siapa lunas kapan, tarif, kontak) disimpan sebagai JSON di dalam tagihan.html
+(<script id="billing-data">). Halaman menghitung periode & status sendiri di browser,
+jadi tetap benar walau tidak dirender ulang saat periode berganti.
 
 Usage:
-  python sync_update.py lunas    # Tandai LUNAS + git push
-  python sync_update.py belum    # Tandai BELUM + git push
-  python sync_update.py refresh  # Refresh periode saja (tanpa ubah status)
+  python sync_update.py lunas    # Lunasi periode tertunggak paling awal (atau periode berjalan) + git push
+  python sync_update.py belum    # Batalkan lunas periode berjalan + git push
+  python sync_update.py refresh  # Render ulang (status dari data) + push kalau ada perubahan
   python sync_update.py show     # Tampilkan status tanpa push
 """
 
+import json
 import re
 import sys
 import subprocess
@@ -19,239 +26,202 @@ from pathlib import Path
 REPO_DIR = Path(__file__).resolve().parent
 TEMPLATE = REPO_DIR / "template.html"
 HTML_FILE = REPO_DIR / "tagihan.html"
-# Git credential disimpan via: git config --local credential.helper store
 
-# ── Indonesian month names ──
 BLN_ID = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
           "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
 
-# Billing mulai Juni 2026 (bulan pertama)
-BILLING_START = (6, 2026)  # (month, year)
+DUE_DAY = 16
+BILLING_START = (6, 2026)  # (month, year) — bulan pertama tagihan
+
+# Nilai awal kalau tagihan.html belum punya blok data (migrasi dari versi lama).
+DEFAULT_DATA = {
+    "customer": "Pak Radjamalik",
+    "amount": 150000,
+    "speed_max": 30,
+    "speed_min": 10,
+    "due_day": DUE_DAY,
+    "billing_start": f"{BILLING_START[1]}-{BILLING_START[0]:02d}",
+    "wa_owner": "6281386341923",
+    "tg_owner": "whayuptr",
+    "paid": {},
+}
+DATA_RE = re.compile(r'<script id="billing-data" type="application/json">(.*?)</script>', re.S)
 
 
-def compute_period():
+def compute_period(today=None):
     """Hitung periode billing 16-ke-16 berdasarkan tanggal hari ini."""
-    today = datetime.now()
-    if today.day >= 16:
+    today = today or datetime.now()
+    if today.day >= DUE_DAY:
         start_m, start_y = today.month, today.year
-        end_m = today.month + 1
-        end_y = today.year
+        end_m, end_y = today.month + 1, today.year
         if end_m > 12:
-            end_m = 1
-            end_y += 1
+            end_m, end_y = 1, end_y + 1
     else:
         end_m, end_y = today.month, today.year
-        start_m = today.month - 1
-        start_y = today.year
+        start_m, start_y = today.month - 1, today.year
         if start_m < 1:
-            start_m = 12
-            start_y -= 1
-
-    due_date = f"16 {BLN_ID[end_m]} {end_y}"
-    period_range = f"16 {BLN_ID[start_m]} – 16 {BLN_ID[end_m]} {end_y}"
-    period_label = f"{BLN_ID[end_m]} {end_y}"
-
-    next_end_m = end_m + 1
-    next_end_y = end_y
-    if next_end_m > 12:
-        next_end_m = 1
-        next_end_y += 1
-    next_due = f"16 {BLN_ID[next_end_m]} {next_end_y}"
-
-    # ISO timestamp for JS countdown (16th of end_month, 00:00 WIB = UTC+7)
-    due_ts = datetime(end_y, end_m, 16, 0, 0, 0).isoformat() + "+07:00"
+            start_m, start_y = 12, start_y - 1
 
     return {
-        "period_range": period_range,
-        "due_date": due_date,
-        "period_label": period_label,
-        "next_due": next_due,
+        "period_range": f"{DUE_DAY} {BLN_ID[start_m]} – {DUE_DAY} {BLN_ID[end_m]} {end_y}",
+        "due_date": f"{DUE_DAY - 1} {BLN_ID[end_m]} {end_y}",
+        "period_label": f"{BLN_ID[end_m]} {end_y}",
+        "key": f"{end_y}-{end_m:02d}",
         "end_month": BLN_ID[end_m],
         "end_year": end_y,
-        "due_timestamp": due_ts,
         "end_month_num": end_m,
     }
 
 
-def read_current_status():
-    """Baca status dari tagihan.html yang sudah ada (atau default 'belum')."""
-    if not HTML_FILE.exists():
-        return "belum"
-    text = HTML_FILE.read_text(encoding="utf-8")
-    m = re.search(r'class="badge (lunas|belum)"', text)
-    return m.group(1) if m else "belum"
+def period_keys(upto_key):
+    """Semua kunci periode dari BILLING_START sampai upto_key (urut lama → baru)."""
+    y, m = BILLING_START[1], BILLING_START[0]
+    out = []
+    while f"{y}-{m:02d}" <= upto_key:
+        out.append(f"{y}-{m:02d}")
+        m += 1
+        if m > 12:
+            m, y = 1, y + 1
+    return out
 
 
-def month_before(m_idx, y):
-    """Return (month_idx, year) for previous month."""
-    m = m_idx - 1
-    if m < 1:
-        return 12, y - 1
-    return m, y
+def _legacy_paid(text):
+    """Baca tabel riwayat format lama (<td>Oktober 2026</td><td class="status-lunas">)."""
+    paid = {}
+    for mo, yr, cls in re.findall(r'<td>(\w+) (\d{4})</td>\s*<td class="status-(\w+)">', text):
+        if mo in BLN_ID and cls == "lunas":
+            paid[f"{yr}-{BLN_ID.index(mo):02d}"] = ""
+    return paid
 
 
-def generate_history_rows(period_info, current_status=None):
-    """Generate riwayat dari bulan pertama billing sampai sekarang.
-
-    current_status: status BARU yang sedang dirender. Wajib diisi oleh render(),
-    kalau tidak baris periode berjalan membaca badge dari file LAMA (jadi selalu
-    ketinggalan satu render — bug: badge LUNAS tapi tabel masih BELUM).
-    """
-    end_m_idx = BLN_ID.index(period_info["end_month"])
-    end_y = period_info["end_year"]
-    start_m, start_y = BILLING_START
-
-    # Build status map from existing file
-    status_map = {}
+def load_data():
+    data = json.loads(json.dumps(DEFAULT_DATA))
     if HTML_FILE.exists():
         text = HTML_FILE.read_text(encoding="utf-8")
-        for match in re.finditer(
-            r'<td>(\w+) (\d{4})</td>\s*<td class="(status-\w+)">([^<]+)</td>',
-            text, re.DOTALL
-        ):
-            status_map[(match.group(1), int(match.group(2)))] = (match.group(3), match.group(4).strip())
-
-    rows = []
-    m_idx, y = end_m_idx, end_y
-
-    while True:
-        month_name = BLN_ID[m_idx]
-        due = f"16 {month_name} {y}"
-        key = (month_name, y)
-
-        # Stop if we went before billing start
-        if y < start_y or (y == start_y and m_idx < start_m):
-            break
-
-        if key == (period_info["end_month"], period_info["end_year"]):
-            # Current period — follow status yang sedang dirender
-            current = current_status or read_current_status()
-            cls = f"status-{current}"
-            txt = "✅ LUNAS" if current == "lunas" else "❌ BELUM"
-        elif key in status_map:
-            cls, txt = status_map[key]
+        m = DATA_RE.search(text)
+        if m:
+            data.update(json.loads(m.group(1)))
         else:
-            cls = "status-lunas"
-            txt = "✅ LUNAS"
+            data["paid"] = _legacy_paid(text)
+    return data
 
-        rows.append(
-            f'        <tr>\n'
-            f'          <td>{month_name} {y}</td>\n'
-            f'          <td class="{cls}">{txt}</td>\n'
-            f'          <td>{due}</td>\n'
-            f'        </tr>'
-        )
 
-        m_idx, y = month_before(m_idx, y)
+def read_current_status():
+    """Status periode berjalan (dihitung dari data, bukan dari badge lama)."""
+    data = load_data()
+    return "lunas" if compute_period()["key"] in data["paid"] else "belum"
 
+
+def rp(n):
+    return "Rp " + f"{int(n):,}".replace(",", ".")
+
+
+def fmt_date(iso):
+    try:
+        y, m, d = (int(x) for x in iso.split("-"))
+        return f"{d} {BLN_ID[m]} {y}"
+    except (ValueError, AttributeError):
+        return "—"
+
+
+def generate_history_rows(data, info):
+    """Baris riwayat untuk tampilan tanpa JavaScript (JS menggambar ulang di browser)."""
+    rows = []
+    for key in reversed(period_keys(info["key"])):
+        y, m = key.split("-")
+        if key in data["paid"]:
+            cls, txt, when = "lunas", "LUNAS", fmt_date(data["paid"][key]) if data["paid"][key] else "—"
+        else:
+            cls, txt, when = "belum", "BELUM", ""
+        rows.append(f'        <tr><td>{BLN_ID[int(m)]} {y}</td><td>{when}</td>'
+                    f'<td class="status-{cls}"><span class="tag {cls}">{txt}</span></td></tr>')
     return "\n".join(rows)
 
 
-def build_alert_html(status, period_info):
-    if status == "lunas":
-        return (
-            f'  <div class="alert info">\n'
-            f'    <span class="icon">✅</span>\n'
-            f'    <div>\n'
-            f'      <strong>Pembayaran LUNAS ✅</strong><br>\n'
-            f'      Akses internet aktif. Tagihan berikutnya: {period_info["next_due"]}.\n'
-            f'    </div>\n'
-            f'  </div>'
-        )
-    else:
-        return (
-            f'  <div class="alert warn">\n'
-            f'    <span class="icon">⚠️</span>\n'
-            f'    <div>\n'
-            f'      <strong>Jatuh tempo: {period_info["due_date"]}</strong><br>\n'
-            f'      Akses internet otomatis diputus jika belum lunas setelah tanggal 16.\n'
-            f'    </div>\n'
-            f'  </div>'
-        )
-
-
-def build_description(status, period_info):
-    if status == "lunas":
-        return (
-            f'      ✅ Pembayaran telah diterima.\n'
-            f'      Akses internet tetap aktif hingga periode berikutnya.'
-        )
-    else:
-        return (
-            f'      Segera lakukan pembayaran sebelum '
-            f'<strong style="color:var(--text)">{period_info["due_date"]}</strong>.\n'
-            f'      Pengingat otomatis dikirim via Telegram H-2 dan H-1.'
-        )
-
-
 def build_qris_section():
-    """Generate QRIS section — image if available, otherwise instructions."""
-    qris_img = REPO_DIR / "qris.png"
-    if qris_img.exists():
-        return (
-            f'    <div style="text-align:center;margin-top:12px;padding:16px;'
-            f'background:white;border-radius:12px">\n'
-            f'      <img src="qris.png" alt="QRIS" style="max-width:200px;height:auto">\n'
-            f'      <p style="color:#333;font-size:0.8rem;margin-top:8px">'
-            f'Scan dengan GoPay/DANA/OVO/m-Banking</p>\n'
-            f'    </div>'
-        )
-    else:
-        return (
-            f'    <div style="text-align:center;margin-top:12px;padding:16px;'
-            f'background:rgba(245,158,11,0.06);border:1px dashed var(--amber);'
-            f'border-radius:8px">\n'
-            f'      <p style="color:var(--amber);font-size:0.85rem">'
-            f'📱 QRIS belum tersedia — minta QR code ke pemilik</p>\n'
-            f'    </div>'
-        )
+    if (REPO_DIR / "qris.png").exists():
+        return ('    <div class="qris">\n'
+                '      <img src="qris.png" alt="QRIS pembayaran" loading="lazy">\n'
+                '      <p>Scan pakai GoPay, DANA, OVO, ShopeePay atau m-Banking</p>\n'
+                '      <a class="btn ghost" style="margin-top:10px" href="qris.png" download="QRIS-internet.png">⬇️ Simpan gambar QRIS</a>\n'
+                '    </div>')
+    return ('    <div class="qris"><p>📱 QRIS belum tersedia — minta kode QR ke pemilik jaringan.</p></div>')
 
 
-def render(status):
-    """Render template → tagihan.html."""
-    template = TEMPLATE.read_text(encoding="utf-8")
-    info = compute_period()
-    now = datetime.now().strftime("%d %b %Y, %H:%M WIB")
+def status_message(status, info):
+    if status == "lunas":
+        return f"✅ Terima kasih! Tagihan <b>{info['period_label']}</b> sudah lunas."
+    return (f"Bayar paling lambat <b>{info['due_date']}</b> pukul 23:59 WIB. "
+            f"Lewat dari itu internet diputus otomatis.")
 
-    en_months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    id_months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
-                 "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
-    for en, id_ in zip(en_months, id_months):
-        now = now.replace(en, id_)
 
-    replacements = {
-        "{{ PERIOD_RANGE }}": info["period_range"],
-        "{{ DUE_DATE }}": info["due_date"],
-        "{{ PERIOD_LABEL }}": info["period_label"],
+def render(data, now=None):
+    """Render template → tagihan.html. Kembalikan status periode berjalan."""
+    now = now or datetime.now()
+    info = compute_period(now)
+    status = "lunas" if info["key"] in data["paid"] else "belum"
+    upd = now.strftime("%d %b %Y, %H:%M WIB")
+    for en, id_ in zip(["May", "Aug", "Oct", "Dec"], ["Mei", "Agu", "Okt", "Des"]):
+        upd = upd.replace(en, id_)
+    data["updated"] = now.strftime("%Y-%m-%dT%H:%M:%S+07:00")
+
+    blob = json.dumps(data, ensure_ascii=False, sort_keys=True).replace("</", "<\\/")
+    repl = {
+        "{{ CUSTOMER }}": data["customer"],
         "{{ STATUS_CLASS }}": status,
-        "{{ STATUS_TEXT }}": "LUNAS" if status == "lunas" else "BELUM LUNAS",
-        "{{ ALERT_HTML }}": build_alert_html(status, info),
-        "{{ DESCRIPTION_HTML }}": build_description(status, info),
-        "{{ HISTORY_ROWS }}": generate_history_rows(info, status),
-        "{{ UPDATE_TIME }}": now,
-        "{{ DUE_TIMESTAMP }}": info["due_timestamp"],
+        "{{ STATUS_TEXT }}": "LUNAS" if status == "lunas" else "BELUM DIBAYAR",
+        "{{ STATUS_MESSAGE }}": status_message(status, info),
+        "{{ PERIOD_RANGE }}": info["period_range"],
+        "{{ PERIOD_LABEL }}": info["period_label"],
+        "{{ DUE_DATE }}": info["due_date"],
+        "{{ AMOUNT }}": rp(data["amount"]),
+        "{{ AMOUNT_RAW }}": str(int(data["amount"])),
+        "{{ SPEED_MAX }}": str(data["speed_max"]),
+        "{{ SPEED_MIN }}": str(data["speed_min"]),
+        "{{ WA_OWNER }}": data["wa_owner"],
+        "{{ TG_OWNER }}": data["tg_owner"],
+        "{{ HISTORY_ROWS }}": generate_history_rows(data, info),
         "{{ QRIS_SECTION }}": build_qris_section(),
+        "{{ UPDATE_TIME }}": upd,
+        "{{ BILLING_DATA }}": blob,
     }
-
-    html = template
-    for placeholder, value in replacements.items():
-        html = html.replace(placeholder, value)
-
+    html = TEMPLATE.read_text(encoding="utf-8")
+    for k, v in repl.items():
+        html = html.replace(k, v)
+    left = re.findall(r"\{\{ [A-Z_]+ \}\}", html)
+    if left:
+        raise RuntimeError(f"placeholder belum terisi: {sorted(set(left))}")
     HTML_FILE.write_text(html, encoding="utf-8")
-    print(f"✅ Rendered: status={status.upper()}, periode={info['period_range']}")
-    print(f"   Due: {info['due_date']}")
+    print(f"✅ Rendered: status={status.upper()}, periode={info['period_range']} ({info['key']})")
+    return status
 
 
-def git_push():
-    """Commit and push (auth via SSH key). Simple push, no stash dance."""
-    import subprocess as sp
-    r = sp.run(["git", "add", "tagihan.html", "template.html", "qris.png"],
-                       cwd=str(REPO_DIR), capture_output=True, text=True, timeout=10)
-    r = sp.run(["git", "commit", "-m", f"Auto: update tagihan"],
-                       cwd=str(REPO_DIR), capture_output=True, text=True, timeout=10)
-    r = subprocess.run(["git", "push", "origin", "main"],
-                       cwd=str(REPO_DIR), capture_output=True, text=True, timeout=20)
+def mark_lunas(data, today=None):
+    """Lunasi tunggakan paling awal; kalau tidak ada tunggakan, periode berjalan."""
+    today = today or datetime.now()
+    info = compute_period(today)
+    for key in period_keys(info["key"]):
+        if key not in data["paid"]:
+            data["paid"][key] = today.strftime("%Y-%m-%d")
+            return key
+    return None
+
+
+def mark_belum(data, today=None):
+    key = compute_period(today)["key"]
+    return key if data["paid"].pop(key, None) is not None else None
+
+
+def git_push(msg="Auto: update tagihan"):
+    """Commit and push (auth via SSH key). Tidak commit kalau tidak ada perubahan."""
+    sp = subprocess
+    sp.run(["git", "add", "tagihan.html", "template.html", "qris.png", "sync_update.py"],
+           cwd=str(REPO_DIR), capture_output=True, text=True, timeout=10)
+    if sp.run(["git", "diff", "--cached", "--quiet"], cwd=str(REPO_DIR)).returncode == 0:
+        print("ℹ️ Tidak ada perubahan untuk di-push")
+        return True
+    sp.run(["git", "commit", "-m", msg], cwd=str(REPO_DIR), capture_output=True, text=True, timeout=10)
+    r = sp.run(["git", "push", "origin", "main"], cwd=str(REPO_DIR), capture_output=True, text=True, timeout=30)
     if r.returncode != 0:
         print(f"git push error: {r.stderr.strip()}")
         return False
@@ -265,18 +235,25 @@ if __name__ == "__main__":
         sys.exit(1)
 
     cmd = sys.argv[1]
+    data = load_data()
     if cmd == "show":
         info = compute_period()
-        status = read_current_status()
-        print(f"Status: {status.upper()}")
-        print(f"Periode: {info['period_range']}")
-        print(f"Jatuh tempo: {info['due_date']}")
-    elif cmd in ("lunas", "belum"):
-        render(cmd)
+        print(f"Status: {read_current_status().upper()}")
+        print(f"Periode: {info['period_range']} ({info['key']})")
+        print(f"Batas bayar: {info['due_date']}")
+        print(f"Lunas: {', '.join(sorted(data['paid'])) or '-'}")
+    elif cmd == "lunas":
+        key = mark_lunas(data)
+        print(f"LUNAS untuk periode {key}" if key else "Semua periode sudah lunas — tidak ada yang diubah")
+        render(data)
+        git_push()
+    elif cmd == "belum":
+        key = mark_belum(data)
+        print(f"Batal lunas periode {key}" if key else "Periode berjalan memang belum lunas")
+        render(data)
         git_push()
     elif cmd == "refresh":
-        status = read_current_status()
-        render(status)
+        render(data)
         git_push()
     else:
         print(f"ERROR: {cmd} — pakai: lunas | belum | refresh | show")
