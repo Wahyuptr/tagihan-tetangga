@@ -12,6 +12,7 @@ jadi tetap benar walau tidak dirender ulang saat periode berganti.
 Usage:
   python sync_update.py lunas    # Lunasi periode tertunggak paling awal (atau periode berjalan) + git push
   python sync_update.py belum    # Batalkan lunas periode berjalan + git push
+  python sync_update.py batal 2026-11  # Batalkan lunas periode tertentu (tombol "Batalkan" QRIS otomatis)
   python sync_update.py refresh  # Render ulang (status dari data) + push kalau ada perubahan
   python sync_update.py show     # Tampilkan status tanpa push
 """
@@ -212,6 +213,13 @@ def mark_belum(data, today=None):
     return key if data["paid"].pop(key, None) is not None else None
 
 
+def mark_batal(data, key):
+    """Batalkan lunas periode `key` (YYYY-MM). Kembalikan key kalau tadinya lunas."""
+    if not re.fullmatch(r"\d{4}-\d{2}", str(key or "")):
+        raise ValueError(f"kunci periode tidak valid: {key!r}")
+    return key if data["paid"].pop(key, None) is not None else None
+
+
 def git_push(msg="Auto: update tagihan"):
     """Commit and push (auth via SSH key). Tidak commit kalau tidak ada perubahan."""
     sp = subprocess
@@ -252,9 +260,14 @@ if __name__ == "__main__":
         print(f"Batal lunas periode {key}" if key else "Periode berjalan memang belum lunas")
         render(data)
         git_push()
+    elif cmd == "batal":
+        key = mark_batal(data, sys.argv[2] if len(sys.argv) > 2 else "")
+        print(f"Batal lunas periode {key}" if key else "Periode itu memang belum lunas")
+        render(data)
+        git_push()
     elif cmd == "refresh":
         render(data)
         git_push()
     else:
-        print(f"ERROR: {cmd} — pakai: lunas | belum | refresh | show")
+        print(f"ERROR: {cmd} — pakai: lunas | belum | batal YYYY-MM | refresh | show")
         sys.exit(1)

@@ -83,6 +83,17 @@ class Marking(Base):
         self.assertEqual(d["paid"], {})
 
 
+class Batal(Base):
+    def test_batal_specific_period(self):
+        d = self.s.load_data()
+        d["paid"] = {"2026-10": "2026-10-14", "2026-11": "2026-10-20"}
+        self.assertEqual(self.s.mark_batal(d, "2026-11"), "2026-11")
+        self.assertEqual(d["paid"], {"2026-10": "2026-10-14"})
+        self.assertIsNone(self.s.mark_batal(d, "2026-12"))
+        with self.assertRaises(ValueError):
+            self.s.mark_batal(d, "../x")
+
+
 class Render(Base):
     def render(self, paid, when):
         d = self.s.load_data()
