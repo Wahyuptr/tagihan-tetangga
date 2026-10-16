@@ -236,7 +236,7 @@
     </div>
     <div class="pm">
       <div class="ic" style="background:linear-gradient(135deg,var(--brand),var(--brand2))">Rp</div>
-      <div class="t"><div class="n">Jumlah transfer</div><div class="v mono" id="amt-plain">{{ AMOUNT }}</div><div class="o">Tanpa kode unik — nominal pas</div></div>
+      <div class="t"><div class="n">Jumlah transfer</div><div class="v mono" id="amt-plain">{{ AMOUNT }}</div><div class="o" id="amt-note">Tanpa kode unik — nominal pas</div></div>
       <button class="copy nojs-hide" id="copy-amt" data-copy="{{ AMOUNT_RAW }}">Salin</button>
     </div>
 
@@ -363,13 +363,18 @@
     if (!Object.prototype.hasOwnProperty.call(paid, ymKey(q[0], q[1]))) arrears.push(q);
   }
   var overdue = arrears.length > 0;
+  // Saat menunggak, yang harus dibayar dulu = tunggakan (urut paling lama), bukan periode berjalan.
+  var oweLabels = arrears.map(function (a) { return BLN[a[1]] + " " + a[0]; }).reverse();
+  var payAmt = overdue ? D.amount * arrears.length : D.amount;
 
   $("cust").textContent = D.customer || $("cust").textContent;
-  $("period").textContent = DUE + " " + BLN[start[1]] + " – " + DUE + " " + BLN[end[1]] + " " + end[0];
+  $("period").textContent = DUE + " " + BLN[start[1]] + (start[0] !== end[0] ? " " + start[0] : "") + " – " + DUE + " " + BLN[end[1]] + " " + end[0];
   $("amount").firstChild.nodeValue = rp(D.amount) + " ";
-  $("step-amt").textContent = rp(D.amount); $("amt-plain").textContent = rp(D.amount);
-  $("copy-amt").setAttribute("data-copy", String(D.amount));
-  $("memo").textContent = "Internet " + label;
+  $("step-amt").textContent = rp(payAmt); $("amt-plain").textContent = rp(payAmt);
+  $("copy-amt").setAttribute("data-copy", String(payAmt));
+  // QRIS otomatis hanya mengenali tepat 1 bulan -> tunggakan > 1 bulan dibayar per bulan
+  if (arrears.length > 1) $("amt-note").textContent = "Lewat QRIS: bayar " + rp(D.amount) + " per bulan (" + arrears.length + "x)";
+  $("memo").textContent = "Internet " + (overdue ? oweLabels.join(" + ") : label);
 
   var hero = $("hero"), pill = $("pill");
   hero.classList.remove("lunas", "belum"); pill.classList.remove("lunas", "belum", "telat");
@@ -384,7 +389,11 @@
   }
 
   var msgEl = $("msg");
-  if (isPaid) {
+  if (overdue) {
+    msgEl.innerHTML = "Bayar dulu tunggakan <b>" + oweLabels.join(", ") + "</b> (" + rp(payAmt) + ") supaya internet aktif kembali. " +
+      (isPaid ? "Tagihan <b>" + label + "</b> sudah lunas."
+              : "Tagihan <b>" + label + "</b> batasnya " + fmtDay(lastDay) + " pukul 23:59 WIB.");
+  } else if (isPaid) {
     var nxt = addMonth(end[0], end[1], 1);
     msgEl.innerHTML = "✅ Terima kasih! Tagihan <b>" + label + "</b> sudah lunas" +
       (paid[key] ? " (dibayar " + fmtDate(paid[key]) + ")" : "") +
@@ -409,10 +418,10 @@
   tick(); setInterval(tick, 30000);
 
   // pesan konfirmasi siap kirim
-  var owe = arrears.map(function (a) { return BLN[a[1]] + " " + a[0]; }).reverse();
-  if (!isPaid) owe.push(label);
-  var text = "Halo, saya " + (D.customer || "") + " sudah transfer tagihan internet periode " + (owe.join(" + ") || label) +
-             " sebesar " + rp(D.amount * Math.max(1, owe.length)) + ". Berikut bukti transfernya:";
+  // menunggak -> konfirmasi tunggakan saja (sama dengan banner); periode berjalan belum jatuh tempo
+  var owe = overdue ? oweLabels : [label];
+  var text = "Halo, saya " + (D.customer || "") + " sudah transfer tagihan internet periode " + owe.join(" + ") +
+             " sebesar " + rp(D.amount * owe.length) + ". Berikut bukti transfernya:";
   $("wa-confirm").href = "https://wa.me/" + D.wa_owner + "?text=" + encodeURIComponent(text);
   $("tg-confirm").href = "https://t.me/" + D.tg_owner;
   if (isPaid && !overdue) { $("wa-confirm").textContent = "💬 Hubungi via WhatsApp"; $("wa-confirm").href = "https://wa.me/" + D.wa_owner; }

@@ -64,7 +64,8 @@ def compute_period(today=None):
             start_m, start_y = 12, start_y - 1
 
     return {
-        "period_range": f"{DUE_DAY} {BLN_ID[start_m]} – {DUE_DAY} {BLN_ID[end_m]} {end_y}",
+        # tahun awal ditulis kalau periode melewati tahun baru (16 Desember 2026 – 16 Januari 2027)
+        "period_range": f"{DUE_DAY} {BLN_ID[start_m]}{f' {start_y}' if start_y != end_y else ''} – {DUE_DAY} {BLN_ID[end_m]} {end_y}",
         "due_date": f"{DUE_DAY - 1} {BLN_ID[end_m]} {end_y}",
         "period_label": f"{BLN_ID[end_m]} {end_y}",
         "key": f"{end_y}-{end_m:02d}",

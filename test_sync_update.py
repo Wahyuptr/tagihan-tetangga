@@ -57,7 +57,9 @@ class Period(Base):
         p = self.s.compute_period(datetime(2026, 10, 16, 0, 0))
         self.assertEqual((p["key"], p["period_range"]), ("2026-11", "16 Oktober – 16 November 2026"))
         p = self.s.compute_period(datetime(2026, 12, 20))
-        self.assertEqual(p["key"], "2027-01")
+        self.assertEqual((p["key"], p["period_range"]), ("2027-01", "16 Desember 2026 – 16 Januari 2027"))
+        p = self.s.compute_period(datetime(2027, 1, 5))
+        self.assertEqual((p["key"], p["period_range"]), ("2027-01", "16 Desember 2026 – 16 Januari 2027"))
 
     def test_period_keys(self):
         self.assertEqual(self.s.period_keys("2026-08"), ["2026-06", "2026-07", "2026-08"])
